@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A guided contemplation of the Pantocrator icon. Sit, breathe, and let the image hold your attention.">
+<meta name="theme-color" content="#0b0805">
+<meta property="og:title" content="Pantocrator — Icon Meditation">
+<meta property="og:description" content="A guided contemplation of the Pantocrator icon.">
+<meta property="og:image" content="icon.jpg">
+<meta property="og:type" content="website">
+<title>Pantocrator — Icon Meditation</title>
+<style>
+:root{color-scheme:dark;--gold:#e8c987;--ink:#f6ecd6;--bg:#0b0805;box-sizing:border-box}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow:hidden}
+#bg{position:fixed;inset:-5%;background:url(bg.jpg) center/cover;filter:blur(40px) brightness(.35)}
+#wrap{position:fixed;left:0;top:0;transform-origin:0 0;transition:transform 4s cubic-bezier(.45,0,.2,1)}
+#wrap img{display:block;width:100%;height:100%;box-shadow:0 0 60px #000}
+#veil{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity 3s}
+#cap{position:fixed;left:0;right:0;bottom:0;padding:14vh 6vw calc(5vh + env(safe-area-inset-bottom,0px));text-align:center;background:linear-gradient(transparent,rgba(5,3,1,.88) 55%);transition:opacity 1.5s;pointer-events:none}
+#cap h2{margin:0 0 .5em;font-weight:normal;font-size:clamp(1.1rem,2.4vw,1.6rem);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+#cap p{margin:0 auto;max-width:42em;font-size:clamp(1rem,2vw,1.35rem);line-height:1.6}
+#cap .pr{margin-top:.8em;font-style:italic;color:var(--gold)}
+#breath{position:fixed;top:calc(4vh + env(safe-area-inset-top,0px));right:4vw;display:flex;align-items:center;gap:.8em;font-size:.95rem;opacity:0;transition:opacity 1.5s}
+#orb{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--gold);background:radial-gradient(#e8c98755,#e8c98708);transform:scale(.55)}
+#ui{position:fixed;top:calc(3vh + env(safe-area-inset-top,0px));left:3vw;display:flex;gap:.5em;flex-wrap:wrap;transition:opacity .8s}
+button,select{background:#1a130aCC;color:var(--ink);border:1px solid #e8c98766;border-radius:6px;padding:.5em .9em;font:inherit;font-size:.9rem;cursor:pointer}
+button:hover,select:hover{border-color:var(--gold)}
+#prog{position:fixed;left:0;bottom:0;height:3px;background:var(--gold);width:0;opacity:.7}
+#start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2em;background:rgba(5,3,1,.62);text-align:center;padding:2em;transition:opacity 1.5s}
+#start h1{margin:0;font-weight:normal;letter-spacing:.2em;text-transform:uppercase;font-size:clamp(1.3rem,3.4vw,2.2rem);color:var(--gold)}
+#start p{margin:0;max-width:32em;line-height:1.6;opacity:.9}
+#start button{font-size:1.1rem;padding:.7em 2em;background:var(--gold);color:#1a1006;border:0}
+.hide{opacity:0!important;pointer-events:none}
+.ui-off #ui{opacity:0}
+.ui-off{cursor:none}
+</style></head><body>
+<div id="bg"></div>
+<div id="wrap"><img id="icon" src="icon.jpg" alt="Icon of Christ Pantocrator"></div>
+<div id="veil"></div>
+<div id="cap" class="hide"><h2 id="t"></h2><p id="x"></p><p class="pr" id="pr"></p></div>
+<div id="breath"><div id="orb"></div><span id="bt"></span></div>
+<div id="ui" class="hide">
+<button id="prev" title="Previous (←)">‹ Back</button>
+<button id="pp" title="Pause (space)">Pause</button>
+<button id="next" title="Next (→)">Next ›</button>
+<select id="dur" title="Time on each point"><option value="45">45 sec / point</option><option value="90" selected>90 sec / point</option><option value="150">2½ min / point</option><option value="240">4 min / point</option></select>
+<button id="snd" title="Bell on/off">Bell: on</button>
+<button id="fs" title="Fullscreen (f)">Fullscreen</button>
+</div>
+<div id="prog"></div>
+<div id="start"><h1>Christ Pantocrator</h1>
+<p>A guided contemplation of the icon. Sit comfortably, let the screen be your window, and follow the breath. Move the mouse to show controls; they fade on their own. Keys: space, ← →, F.</p>
+<button id="go">Begin</button></div>
+<script>
+// Points: fx,fy = focus on the image (0–1); z = zoom; r = spotlight radius (vmin %), 0 = none
+var S=[
+{t:"Arrive",x:"Let your eyes rest on the whole icon. Feet on the floor, shoulders loosening. You are not here to achieve anything — only to be looked at, and to look back.",fx:.5,fy:.5,z:1,r:0,b:1},
+{t:"The Gold",x:"The ground is gold: not a place, but light. Icon painters used it to say that this is the uncreated light of eternity, not an earthly room. Let the gold fill your sight and your busy mind grow quiet.",fx:.5,fy:.3,z:1.35,r:62,b:1},
+{t:"The Halo — Ὁ ΩΝ",x:"Within the cross-marked halo are three Greek letters: Ho Ōn, “He Who Is” — the name given to Moses at the burning bush. Rest in simply being. He is; you are held in being by Him.",fx:.51,fy:.34,z:1.7,r:46,b:1},
+{t:"The Gaze",x:"Meet the eyes. They are steady, searching, and without condemnation. Don’t perform; let yourself be seen exactly as you are. Stay with the gaze, and with your breath.",fx:.5,fy:.385,z:2.8,r:36,b:1},
+{t:"The Blessing Hand",x:"The fingers shape the letters IC XC — Jesus Christ — in blessing and teaching. Receive the blessing. Open your own hands in your lap, palms up, in welcome.",fx:.39,fy:.77,z:2.5,r:36,b:1},
+{t:"The Book of the Gospels",x:"He holds the Word, jewelled and closed against His heart. Bring to mind one line of Scripture that has sustained you, and let it sit in the quiet without analysing it.",fx:.68,fy:.77,z:2.5,r:36,b:1},
+{t:"Heaven and Earth",x:"Traditionally the garments speak of two natures in one person: divine and human, heaven and earth joined. Notice how the colours settle against one another. Let that union hold you too.",fx:.5,fy:.66,z:1.6,r:52,b:1},
+{t:"The Name",x:"IC XC. Let the name set the rhythm of your breath. Breathe in on the first half, out on the second, and let the words grow quieter until only the breathing is left.",pr:"Lord Jesus Christ, Son of God, have mercy on me, a sinner.",fx:.5,fy:.5,z:1.15,r:0,b:1},
+{t:"Rest",x:"Silence now. Let the whole icon come back into view and simply remain, a few more breaths, before you return to the day.",fx:.5,fy:.5,z:1,r:0,b:0}
+];
+var $=function(i){return document.getElementById(i)},W=$("wrap"),V=$("veil"),cap=$("cap"),UI=$("ui"),AR=1792/2400;
+var i=-1,paused=false,left=0,dur=90,bell=true,began=false,reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function size(){var h=innerHeight,w=h*AR;if(w>innerWidth){w=innerWidth;h=w/AR}W.style.width=w+"px";W.style.height=h+"px";W._w=w;W._h=h;if(i>=0)focus(S[i],true)}
+function focus(p,now){var vw=innerWidth,vh=innerHeight,small=vw<700,cy=vh*(small?.38:.42),z=p.z;
+ var tx=vw/2-p.fx*W._w*z,ty=cy-p.fy*W._h*z;
+ if(z===1){tx=(vw-W._w)/2;ty=(vh-W._h)/2}
+ if(now||reduced)W.style.transition="none";else W.style.transition="";
+ W.style.transform="translate("+tx+"px,"+ty+"px) scale("+z+")";
+ if(now)requestAnimationFrame(function(){W.style.transition=""});
+ if(p.r){var R=Math.min(vw,vh)*p.r/100;V.style.background="radial-gradient(circle at 50% "+cy+"px,transparent "+(R*.55)+"px,rgba(4,2,1,.78) "+R+"px)";V.style.opacity=1}else V.style.opacity=0}
+function chime(){if(!bell)return;try{var a=chime.a||(chime.a=new(window.AudioContext||window.webkitAudioContext)()),n=a.currentTime;[220,330].forEach(function(f,k){var o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(.12/(k+1),n+.05);g.gain.exponentialRampToValueAtTime(.0001,n+6);o.connect(g);g.connect(a.destination);o.start(n);o.stop(n+6.2)})}catch(e){}}
+function show(n){if(n<0)n=0;if(n>=S.length){n=S.length-1;left=1e9}
+ i=n;var p=S[i];cap.classList.add("hide");
+ setTimeout(function(){$("t").textContent=p.t;$("x").textContent=p.x;$("pr").textContent=p.pr||"";cap.classList.remove("hide")},1200);
+ focus(p);left=i===S.length-1?dur*1000:dur*1000;total=left;$("breath").style.opacity=p.b?1:0;chime()}
+var total=1,last=0;
+function tick(ts){var d=ts-last;last=ts;if(began&&!paused){left-=d;$("prog").style.width=(100-100*left/total)+"%";if(left<=0&&i<S.length-1)show(i+1)}
+ // breathing: 4s in, 6s out
+ var c=(ts%10000)/10000,inh=c<.4,k=inh?c/.4:1-(c-.4)/.6,e=k*k*(3-2*k);$("orb").style.transform="scale("+(.55+.65*e)+")";var tx=inh?"Breathe in":"Breathe out";if($("bt").textContent!==tx)$("bt").textContent=tx;
+ requestAnimationFrame(tick)}
+var hideT;function wake(){document.body.classList.remove("ui-off");UI.classList.remove("hide");clearTimeout(hideT);hideT=setTimeout(function(){if(began)document.body.classList.add("ui-off")},4000)}
+function toggleFS(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
+$("go").onclick=function(){began=true;$("start").classList.add("hide");wake();show(0);last=performance.now()};
+$("next").onclick=function(){show(i+1)};$("prev").onclick=function(){show(i-1)};
+$("pp").onclick=function(){paused=!paused;$("pp").textContent=paused?"Resume":"Pause"};
+$("dur").onchange=function(){dur=+this.value;left=total=dur*1000};
+$("snd").onclick=function(){bell=!bell;$("snd").textContent="Bell: "+(bell?"on":"off")};
+$("fs").onclick=toggleFS;
+addEventListener("mousemove",wake);addEventListener("touchstart",wake);addEventListener("resize",size);
+addEventListener("keydown",function(e){if(!began)return;wake();if(e.code==="Space"){e.preventDefault();$("pp").click()}else if(e.key==="ArrowRight")show(i+1);else if(e.key==="ArrowLeft")show(i-1);else if(e.key==="f"||e.key==="F")toggleFS()});
+size();W.style.transform="translate("+(innerWidth-W._w)/2+"px,"+(innerHeight-W._h)/2+"px)";requestAnimationFrame(tick);
+</script></body></html>
