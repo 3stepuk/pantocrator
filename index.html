@@ -20,7 +20,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family
 #cap h2{margin:0 0 .5em;font-weight:normal;font-size:clamp(1.1rem,2.4vw,1.6rem);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
 #cap p{margin:0 auto;max-width:42em;font-size:clamp(1rem,2vw,1.35rem);line-height:1.6}
 #cap .pr{margin-top:.8em;font-style:italic;color:var(--gold)}
-#breath{position:fixed;top:calc(4vh + env(safe-area-inset-top,0px));right:4vw;display:flex;align-items:center;gap:.8em;font-size:.95rem;opacity:0;transition:opacity 1.5s;text-shadow:0 1px 8px rgba(0,0,0,.95)}
+#breath{position:fixed;z-index:20;top:calc(4vh + env(safe-area-inset-top,0px));right:4vw;display:flex;align-items:center;gap:.8em;font-size:.95rem;opacity:0;transition:opacity 1.5s;text-shadow:0 1px 8px rgba(0,0,0,.95)}
 #orb{width:46px;height:46px;border-radius:50%;border:2px solid #8fe3f5;background:radial-gradient(#8fe3f5aa,#8fe3f522);box-shadow:0 0 18px rgba(120,215,235,.6);transform:scale(.7)}
 #ui{position:fixed;top:calc(3vh + env(safe-area-inset-top,0px));left:3vw;display:flex;gap:.5em;flex-wrap:wrap;transition:opacity .8s}
 button,select{background:#1a130aCC;color:var(--ink);border:1px solid #e8c98766;border-radius:6px;padding:.5em .9em;font:inherit;font-size:.9rem;cursor:pointer}
@@ -44,8 +44,9 @@ button:hover,select:hover{border-color:var(--gold)}
 <button id="pp" title="Pause (space)">Pause</button>
 <button id="next" title="Next (→)">Next ›</button>
 <select id="dur" title="Time on each point"><option value="45">45 sec / point</option><option value="90" selected>90 sec / point</option><option value="150">2½ min / point</option><option value="240">4 min / point</option></select><select id="br" title="Breathing rhythm"><option value="4-4">Breath 4·4</option><option value="4-6" selected>Breath 4·6</option><option value="6-6">Breath 6·6</option><option value="4-7-8">Breath 4·7·8</option><option value="none">Breath off</option></select>
-<button id="snd" title="Bell on/off">Bell: on</button>
-<button id="fs" title="Fullscreen (f)">Fullscreen</button>
+ <button id="snd" title="Bell on/off">Bell: on</button>
+ <button id="mus" title="Ambient music on/off">Music: off</button>
+ <button id="fs" title="Fullscreen (f)">Fullscreen</button>
 </div>
 <div id="prog"></div>
 <div id="start"><h1>Christ Pantocrator</h1>
@@ -71,14 +72,43 @@ function focus(p,now){var vw=innerWidth,vh=innerHeight,small=vw<700,cy=vh*(small
  var tx=vw/2-p.fx*W._w*z,ty=cy-p.fy*W._h*z;
  if(z===1){tx=(vw-W._w)/2;ty=(vh-W._h)/2}
  var rightEdge=tx+W._w*z, gap=vw-rightEdge, brEl=$("breath");
- brEl.style.left="auto";
- brEl.style.right=(gap>=120?Math.round(gap+16):Math.max(12,Math.round(gap+8)))+"px";
- brEl.style.top=Math.max(10,Math.min(ty+16,vh*0.16))+"px";
+ var bw=brEl.offsetWidth||150,bh=brEl.offsetHeight||46;
+ var lx=tx+W._w*z+12;
+ if(lx+bw>vw-8)lx=vw-bw-12;
+ if(lx<8)lx=8;
+ var ly=Math.max(10,Math.min(ty+10,vh-bh-16));
+ brEl.style.left=Math.round(lx)+"px";brEl.style.right="auto";brEl.style.top=Math.round(ly)+"px";
  if(now||reduced)W.style.transition="none";else W.style.transition="";
  W.style.transform="translate("+tx+"px,"+ty+"px) scale("+z+")";
  if(now)requestAnimationFrame(function(){W.style.transition=""});
  if(p.r){var R=Math.min(vw,vh)*p.r/100;V.style.background="radial-gradient(circle at 50% "+cy+"px,transparent "+(R*.55)+"px,rgba(4,2,1,.78) "+R+"px)";V.style.opacity=1}else V.style.opacity=0}
 function chime(){if(!bell)return;try{var a=chime.a||(chime.a=new(window.AudioContext||window.webkitAudioContext)()),n=a.currentTime;[220,330].forEach(function(f,k){var o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(.12/(k+1),n+.05);g.gain.exponentialRampToValueAtTime(.0001,n+6);o.connect(g);g.connect(a.destination);o.start(n);o.stop(n+6.2)})}catch(e){}}
+// ---- ambient pad: four slow chords, synthesised, no audio files ----------
+var music=false,pad=null;
+function AC(){return chime.a||(chime.a=new(window.AudioContext||window.webkitAudioContext)())}
+function irBuf(a,sec){var n=Math.max(1,Math.floor(a.sampleRate*sec)),b=a.createBuffer(2,n,a.sampleRate);for(var c=0;c<2;c++){var d=b.getChannelData(c);for(var k=0;k<n;k++){d[k]=(Math.random()*2-1)*Math.pow(1-k/n,2.8)}}return b}
+function ramp(param,to,sec){var t=pad.a.currentTime;param.cancelScheduledValues(t);param.setValueAtTime(param.value,t);param.linearRampToValueAtTime(to,t+sec)}
+var CH=[[146.83,174.61,220.00,293.66],[116.54,146.83,174.61,233.08],[130.81,174.61,220.00,261.63],[130.81,164.81,196.00,261.63]];
+function padTimer(){clearTimeout(pad.timer);pad.timer=setTimeout(function(){if(!pad||!pad.on)return;var t=pad.a.currentTime,nxt=(pad.idx+1)%pad.chords.length;pad.chords[pad.idx].gain.setTargetAtTime(0,t,3.2);pad.chords[nxt].gain.setTargetAtTime(1,t,3.2);pad.idx=nxt;padTimer()},24000)}
+function padStart(){
+  if(pad){pad.on=true;ramp(pad.out.gain,.9,4);padTimer();return}
+  var a=AC();if(a.state==="suspended")a.resume();
+  var out=a.createGain();out.gain.value=0;
+  var lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1150;lp.Q.value=.4;
+  var rev=a.createConvolver();rev.buffer=irBuf(a,3.4);
+  var wet=a.createGain();wet.gain.value=.5;
+  lp.connect(out);lp.connect(rev);rev.connect(wet);wet.connect(out);out.connect(a.destination);
+  var chords=CH.map(function(fs){var g=a.createGain();g.gain.value=0;g.connect(lp);
+    fs.forEach(function(f){var o=a.createOscillator();o.type="triangle";o.frequency.value=f;o.detune.value=(Math.random()*10-5);
+      var og=a.createGain();og.gain.value=.02;o.connect(og);og.connect(g);o.start()});return g});
+  var lfo=a.createOscillator(),lg=a.createGain();
+  lfo.frequency.value=.045;lg.gain.value=260;lfo.connect(lg);lg.connect(lp.frequency);lfo.start();
+  pad={a:a,out:out,chords:chords,idx:0,on:true,timer:null};
+  chords[0].gain.setTargetAtTime(1,a.currentTime,2.5);
+  ramp(out.gain,.9,6);
+  padTimer();
+}
+function padStop(){if(!pad)return;pad.on=false;ramp(pad.out.gain,0,4);clearTimeout(pad.timer)}
 function show(n){if(n<0)n=0;if(n>=S.length){n=S.length-1;left=1e9}
  i=n;var p=S[i];cap.classList.add("hide");
  setTimeout(function(){$("t").textContent=p.t;$("x").textContent=p.x;$("pr").textContent=p.pr||"";cap.classList.remove("hide")},1200);
@@ -98,12 +128,13 @@ function tick(ts){var d=ts-last;last=ts;if(began&&!paused){left-=d;$("prog").sty
  requestAnimationFrame(tick)}
 var hideT;function wake(){document.body.classList.remove("ui-off");UI.classList.remove("hide");clearTimeout(hideT);hideT=setTimeout(function(){if(began)document.body.classList.add("ui-off")},4000)}
 function toggleFS(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
-$("go").onclick=function(){began=true;$("start").classList.add("hide");wake();show(0);last=performance.now()};
+$("go").onclick=function(){began=true;$("start").classList.add("hide");wake();show(0);last=performance.now();if(music)padStart()};
 $("br").onchange=function(){rhythm=this.value;var b=$("breath");b.style.opacity=rhythm==="none"?0:1};
 $("next").onclick=function(){show(i+1)};$("prev").onclick=function(){show(i-1)};
 $("pp").onclick=function(){paused=!paused;$("pp").textContent=paused?"Resume":"Pause"};
 $("dur").onchange=function(){dur=+this.value;left=total=dur*1000};
 $("snd").onclick=function(){bell=!bell;$("snd").textContent="Bell: "+(bell?"on":"off")};
+$("mus").onclick=function(){music=!music;$("mus").textContent="Music: "+(music?"on":"off");if(!began)return;if(music)padStart();else padStop()};
 $("fs").onclick=toggleFS;
 addEventListener("mousemove",wake);addEventListener("touchstart",wake);addEventListener("resize",size);
 addEventListener("keydown",function(e){if(!began)return;wake();if(e.code==="Space"){e.preventDefault();$("pp").click()}else if(e.key==="ArrowRight")show(i+1);else if(e.key==="ArrowLeft")show(i-1);else if(e.key==="f"||e.key==="F")toggleFS()});
