@@ -88,7 +88,7 @@ function tick(ts){var d=ts-last;last=ts;if(began&&!paused){left-=d;$("prog").sty
   if(c<R.i){e=sm(c/R.i);tx="Breathe in"}
   else if(c<R.i+R.h){e=1;tx="Hold"}
   else {e=1-sm((c-R.i-R.h)/R.o);tx="Breathe out"}
-  $("orb").style.transform="scale("+(.55+.65*e)+")";
+  $("orb").style.transform="scale("+(.82+.20*e)+")";
   if($("bt").textContent!==tx)$("bt").textContent=tx;
  }
  requestAnimationFrame(tick)}
