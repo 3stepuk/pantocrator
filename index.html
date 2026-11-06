@@ -43,7 +43,7 @@ button:hover,select:hover{border-color:var(--gold)}
 <button id="prev" title="Previous (←)">‹ Back</button>
 <button id="pp" title="Pause (space)">Pause</button>
 <button id="next" title="Next (→)">Next ›</button>
-<select id="dur" title="Time on each point"><option value="45">45 sec / point</option><option value="90" selected>90 sec / point</option><option value="150">2½ min / point</option><option value="240">4 min / point</option></select>
+<select id="dur" title="Time on each point"><option value="45">45 sec / point</option><option value="90" selected>90 sec / point</option><option value="150">2½ min / point</option><option value="240">4 min / point</option></select><select id="br" title="Breathing rhythm"><option value="4-4">Breath 4·4</option><option value="4-6" selected>Breath 4·6</option><option value="6-6">Breath 6·6</option><option value="4-7-8">Breath 4·7·8</option><option value="none">Breath off</option></select>
 <button id="snd" title="Bell on/off">Bell: on</button>
 <button id="fs" title="Fullscreen (f)">Fullscreen</button>
 </div>
@@ -65,7 +65,7 @@ var S=[
 {t:"Rest",x:"Silence now. Let the whole icon come back into view and simply remain, a few more breaths, before you return to the day.",fx:.5,fy:.5,z:1,r:0,b:0}
 ];
 var $=function(i){return document.getElementById(i)},W=$("wrap"),V=$("veil"),cap=$("cap"),UI=$("ui"),AR=1792/2400;
-var i=-1,paused=false,left=0,dur=90,bell=true,began=false,reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+var i=-1,paused=false,left=0,dur=90,bell=true,began=false,RHYTHMS={"4-4":{i:4,h:0,o:4},"4-6":{i:4,h:0,o:6},"6-6":{i:6,h:0,o:6},"4-7-8":{i:4,h:7,o:8}},rhythm="4-6",reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
 function size(){var h=innerHeight,w=h*AR;if(w>innerWidth){w=innerWidth;h=w/AR}W.style.width=w+"px";W.style.height=h+"px";W._w=w;W._h=h;if(i>=0)focus(S[i],true)}
 function focus(p,now){var vw=innerWidth,vh=innerHeight,small=vw<700,cy=vh*(small?.38:.42),z=p.z;
  var tx=vw/2-p.fx*W._w*z,ty=cy-p.fy*W._h*z;
@@ -81,12 +81,21 @@ function show(n){if(n<0)n=0;if(n>=S.length){n=S.length-1;left=1e9}
  focus(p);left=i===S.length-1?dur*1000:dur*1000;total=left;$("breath").style.opacity=p.b?1:0;chime()}
 var total=1,last=0;
 function tick(ts){var d=ts-last;last=ts;if(began&&!paused){left-=d;$("prog").style.width=(100-100*left/total)+"%";if(left<=0&&i<S.length-1)show(i+1)}
- // breathing: 4s in, 6s out
- var c=(ts%10000)/10000,inh=c<.4,k=inh?c/.4:1-(c-.4)/.6,e=k*k*(3-2*k);$("orb").style.transform="scale("+(.55+.65*e)+")";var tx=inh?"Breathe in":"Breathe out";if($("bt").textContent!==tx)$("bt").textContent=tx;
+ // breathing: rhythm from the selector
+ if(rhythm!=="none"){
+  var R=RHYTHMS[rhythm],cyc=(R.i+R.h+R.o)*1000,c=(ts%cyc)/1000,e,tx;
+  var sm=function(k){return k*k*(3-2*k)};
+  if(c<R.i){e=sm(c/R.i);tx="Breathe in"}
+  else if(c<R.i+R.h){e=1;tx="Hold"}
+  else {e=1-sm((c-R.i-R.h)/R.o);tx="Breathe out"}
+  $("orb").style.transform="scale("+(.55+.65*e)+")";
+  if($("bt").textContent!==tx)$("bt").textContent=tx;
+ }
  requestAnimationFrame(tick)}
 var hideT;function wake(){document.body.classList.remove("ui-off");UI.classList.remove("hide");clearTimeout(hideT);hideT=setTimeout(function(){if(began)document.body.classList.add("ui-off")},4000)}
 function toggleFS(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
 $("go").onclick=function(){began=true;$("start").classList.add("hide");wake();show(0);last=performance.now()};
+$("br").onchange=function(){rhythm=this.value;var b=$("breath");b.style.opacity=rhythm==="none"?0:1};
 $("next").onclick=function(){show(i+1)};$("prev").onclick=function(){show(i-1)};
 $("pp").onclick=function(){paused=!paused;$("pp").textContent=paused?"Resume":"Pause"};
 $("dur").onchange=function(){dur=+this.value;left=total=dur*1000};
