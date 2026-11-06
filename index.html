@@ -20,7 +20,8 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family
 #cap h2{margin:0 0 .5em;font-weight:normal;font-size:clamp(1.1rem,2.4vw,1.6rem);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
 #cap p{margin:0 auto;max-width:42em;font-size:clamp(1rem,2vw,1.35rem);line-height:1.6}
 #cap .pr{margin-top:.8em;font-style:italic;color:var(--gold)}
-#bgglow{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(58% 52% at 50% 44%,rgba(232,201,135,.22),rgba(232,201,135,.06) 55%,transparent 72%)}
+#bgglow{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(80% 78% at 50% 45%,rgba(236,206,142,.45),rgba(236,206,142,.16) 55%,rgba(236,206,142,.06) 100%)}
+#bgshade{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(78% 72% at 50% 45%,rgba(0,0,0,.10),rgba(0,0,0,.78) 100%)}
 #breath{position:fixed;z-index:20;top:calc(4vh + env(safe-area-inset-top,0px));right:4vw;display:flex;align-items:center;gap:.8em;font-size:.95rem;opacity:0;transition:opacity 1.5s;text-shadow:0 1px 8px rgba(0,0,0,.95)}
 #orb{width:46px;height:46px;border-radius:50%;border:2px solid #8fe3f5;background:radial-gradient(#8fe3f5aa,#8fe3f522);box-shadow:0 0 18px rgba(120,215,235,.6);transform:scale(.7)}
 #ui{position:fixed;top:calc(3vh + env(safe-area-inset-top,0px));left:3vw;display:flex;gap:.5em;flex-wrap:wrap;transition:opacity .8s}
@@ -37,6 +38,7 @@ button:hover,select:hover{border-color:var(--gold)}
 </style></head><body>
 <div id="bg"></div>
 <div id="bgglow"></div>
+<div id="bgshade"></div>
 <div id="wrap"><img id="icon" src="icon.jpg" alt="Icon of Christ Pantocrator"></div>
 <div id="veil"></div>
 <div id="cap" class="hide"><h2 id="t"></h2><p id="x"></p><p class="pr" id="pr"></p></div>
@@ -78,7 +80,7 @@ function focus(p,now){var vw=innerWidth,vh=innerHeight,small=vw<700,cy=vh*(small
  var lx=tx+W._w*z+12;
  if(lx+bw>vw-8)lx=vw-bw-12;
  if(lx<8)lx=8;
- var ly=Math.max(10,Math.min(ty+10,vh-bh-16));
+ var ly=Math.max(60,Math.min(ty+56,vh-bh-16));
  brEl.style.left=Math.round(lx)+"px";brEl.style.right="auto";brEl.style.top=Math.round(ly)+"px";
  if(now||reduced)W.style.transition="none";else W.style.transition="";
  W.style.transform="translate("+tx+"px,"+ty+"px) scale("+z+")";
@@ -125,15 +127,15 @@ function tick(ts){var d=ts-last;last=ts;if(began&&!paused){left-=d;$("prog").sty
   else if(c<R.i+R.h){e=1;tx="Hold"}
   else {e=1-sm((c-R.i-R.h)/R.o);tx="Breathe out"}
   $("orb").style.transform="scale("+(.70+.50*e)+")";
-  if(bgBreathe){$("bg").style.transform="scale("+(1+.06*e).toFixed(4)+")";$("bgglow").style.opacity=(.10+.90*e).toFixed(3)}
+  if(bgBreathe){$("bg").style.transform="scale("+(1+.09*e).toFixed(4)+")";$("bgglow").style.opacity=(.10+.90*e).toFixed(3);$("bgshade").style.opacity=(.55-.42*e).toFixed(3)}
   if($("bt").textContent!==tx)$("bt").textContent=tx;
  }
  requestAnimationFrame(tick)}
 var hideT;function wake(){document.body.classList.remove("ui-off");UI.classList.remove("hide");clearTimeout(hideT);hideT=setTimeout(function(){if(began)document.body.classList.add("ui-off")},4000)}
 function toggleFS(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
 $("go").onclick=function(){began=true;$("start").classList.add("hide");wake();show(0);last=performance.now();if(music)padStart()};
-$("br").onchange=function(){rhythm=this.value;var b=$("breath");b.style.opacity=rhythm==="none"?0:1;if(rhythm==="none"){$("bg").style.transform="";$("bgglow").style.opacity=0}};
-$("bgm").onclick=function(){bgBreathe=!bgBreathe;this.textContent="Backdrop: "+(bgBreathe?"breathe":"still");if(!bgBreathe){$("bg").style.transform="";$("bgglow").style.opacity=0}};
+$("br").onchange=function(){rhythm=this.value;var b=$("breath");b.style.opacity=rhythm==="none"?0:1;if(rhythm==="none"){$("bg").style.transform="";$("bgglow").style.opacity=0;$("bgshade").style.opacity=.55}};
+$("bgm").onclick=function(){bgBreathe=!bgBreathe;this.textContent="Backdrop: "+(bgBreathe?"breathe":"still");if(!bgBreathe){$("bg").style.transform="";$("bgglow").style.opacity=0;$("bgshade").style.opacity=.55}};
 $("next").onclick=function(){show(i+1)};$("prev").onclick=function(){show(i-1)};
 $("pp").onclick=function(){paused=!paused;$("pp").textContent=paused?"Resume":"Pause"};
 $("dur").onchange=function(){dur=+this.value;left=total=dur*1000};
