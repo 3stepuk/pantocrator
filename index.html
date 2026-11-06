@@ -12,7 +12,7 @@
 :root{color-scheme:dark;--gold:#e8c987;--ink:#f6ecd6;--bg:#0b0805;box-sizing:border-box}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow:hidden}
-#bg{position:fixed;inset:-5%;background:url(bg.jpg) center/cover;filter:blur(40px) brightness(.35)}
+#bg{position:fixed;inset:-5%;background:url(bg.jpg) center/cover;filter:blur(40px) brightness(.35);transform-origin:50% 45%;will-change:transform}
 #wrap{position:fixed;left:0;top:0;transform-origin:0 0;transition:transform 4s cubic-bezier(.45,0,.2,1)}
 #wrap img{display:block;width:100%;height:100%;box-shadow:0 0 60px #000}
 #veil{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity 3s}
@@ -20,6 +20,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family
 #cap h2{margin:0 0 .5em;font-weight:normal;font-size:clamp(1.1rem,2.4vw,1.6rem);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
 #cap p{margin:0 auto;max-width:42em;font-size:clamp(1rem,2vw,1.35rem);line-height:1.6}
 #cap .pr{margin-top:.8em;font-style:italic;color:var(--gold)}
+#bgglow{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(58% 52% at 50% 44%,rgba(232,201,135,.22),rgba(232,201,135,.06) 55%,transparent 72%)}
 #breath{position:fixed;z-index:20;top:calc(4vh + env(safe-area-inset-top,0px));right:4vw;display:flex;align-items:center;gap:.8em;font-size:.95rem;opacity:0;transition:opacity 1.5s;text-shadow:0 1px 8px rgba(0,0,0,.95)}
 #orb{width:46px;height:46px;border-radius:50%;border:2px solid #8fe3f5;background:radial-gradient(#8fe3f5aa,#8fe3f522);box-shadow:0 0 18px rgba(120,215,235,.6);transform:scale(.7)}
 #ui{position:fixed;top:calc(3vh + env(safe-area-inset-top,0px));left:3vw;display:flex;gap:.5em;flex-wrap:wrap;transition:opacity .8s}
@@ -35,6 +36,7 @@ button:hover,select:hover{border-color:var(--gold)}
 .ui-off{cursor:none}
 </style></head><body>
 <div id="bg"></div>
+<div id="bgglow"></div>
 <div id="wrap"><img id="icon" src="icon.jpg" alt="Icon of Christ Pantocrator"></div>
 <div id="veil"></div>
 <div id="cap" class="hide"><h2 id="t"></h2><p id="x"></p><p class="pr" id="pr"></p></div>
@@ -43,7 +45,7 @@ button:hover,select:hover{border-color:var(--gold)}
 <button id="prev" title="Previous (←)">‹ Back</button>
 <button id="pp" title="Pause (space)">Pause</button>
 <button id="next" title="Next (→)">Next ›</button>
-<select id="dur" title="Time on each point"><option value="45">45 sec / point</option><option value="90" selected>90 sec / point</option><option value="150">2½ min / point</option><option value="240">4 min / point</option></select><select id="br" title="Breathing rhythm"><option value="4-4">Breath 4·4</option><option value="4-6" selected>Breath 4·6</option><option value="6-6">Breath 6·6</option><option value="4-7-8">Breath 4·7·8</option><option value="none">Breath off</option></select>
+<select id="dur" title="Time on each point"><option value="45">45 sec / point</option><option value="90" selected>90 sec / point</option><option value="150">2½ min / point</option><option value="240">4 min / point</option></select><button id="bgm" title="Backdrop breathes with the rhythm">Backdrop: breathe</button><select id="br" title="Breathing rhythm"><option value="4-4">Breath 4·4</option><option value="4-6" selected>Breath 4·6</option><option value="6-6">Breath 6·6</option><option value="4-7-8">Breath 4·7·8</option><option value="none">Breath off</option></select>
  <button id="snd" title="Bell on/off">Bell: on</button>
  <button id="mus" title="Ambient music on/off">Music: off</button>
  <button id="fs" title="Fullscreen (f)">Fullscreen</button>
@@ -66,7 +68,7 @@ var S=[
 {t:"Rest",x:"Silence now. Let the whole icon come back into view and simply remain, a few more breaths, before you return to the day.",fx:.5,fy:.5,z:1,r:0,b:0}
 ];
 var $=function(i){return document.getElementById(i)},W=$("wrap"),V=$("veil"),cap=$("cap"),UI=$("ui"),AR=1792/2400;
-var i=-1,paused=false,left=0,dur=90,bell=true,began=false,RHYTHMS={"4-4":{i:4,h:0,o:4},"4-6":{i:4,h:0,o:6},"6-6":{i:6,h:0,o:6},"4-7-8":{i:4,h:7,o:8}},rhythm="4-6",reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+var bgBreathe=true,i=-1,paused=false,left=0,dur=90,bell=true,began=false,RHYTHMS={"4-4":{i:4,h:0,o:4},"4-6":{i:4,h:0,o:6},"6-6":{i:6,h:0,o:6},"4-7-8":{i:4,h:7,o:8}},rhythm="4-6",reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
 function size(){var h=innerHeight,w=h*AR;if(w>innerWidth){w=innerWidth;h=w/AR}W.style.width=w+"px";W.style.height=h+"px";W._w=w;W._h=h;if(i>=0)focus(S[i],true)}
 function focus(p,now){var vw=innerWidth,vh=innerHeight,small=vw<700,cy=vh*(small?.38:.42),z=p.z;
  var tx=vw/2-p.fx*W._w*z,ty=cy-p.fy*W._h*z;
@@ -123,13 +125,15 @@ function tick(ts){var d=ts-last;last=ts;if(began&&!paused){left-=d;$("prog").sty
   else if(c<R.i+R.h){e=1;tx="Hold"}
   else {e=1-sm((c-R.i-R.h)/R.o);tx="Breathe out"}
   $("orb").style.transform="scale("+(.70+.50*e)+")";
+  if(bgBreathe){$("bg").style.transform="scale("+(1+.06*e).toFixed(4)+")";$("bgglow").style.opacity=(.10+.90*e).toFixed(3)}
   if($("bt").textContent!==tx)$("bt").textContent=tx;
  }
  requestAnimationFrame(tick)}
 var hideT;function wake(){document.body.classList.remove("ui-off");UI.classList.remove("hide");clearTimeout(hideT);hideT=setTimeout(function(){if(began)document.body.classList.add("ui-off")},4000)}
 function toggleFS(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
 $("go").onclick=function(){began=true;$("start").classList.add("hide");wake();show(0);last=performance.now();if(music)padStart()};
-$("br").onchange=function(){rhythm=this.value;var b=$("breath");b.style.opacity=rhythm==="none"?0:1};
+$("br").onchange=function(){rhythm=this.value;var b=$("breath");b.style.opacity=rhythm==="none"?0:1;if(rhythm==="none"){$("bg").style.transform="";$("bgglow").style.opacity=0}};
+$("bgm").onclick=function(){bgBreathe=!bgBreathe;this.textContent="Backdrop: "+(bgBreathe?"breathe":"still");if(!bgBreathe){$("bg").style.transform="";$("bgglow").style.opacity=0}};
 $("next").onclick=function(){show(i+1)};$("prev").onclick=function(){show(i-1)};
 $("pp").onclick=function(){paused=!paused;$("pp").textContent=paused?"Resume":"Pause"};
 $("dur").onchange=function(){dur=+this.value;left=total=dur*1000};
