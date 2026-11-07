@@ -12,7 +12,7 @@
 :root{color-scheme:dark;--gold:#e8c987;--ink:#f6ecd6;--bg:#0b0805;box-sizing:border-box}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow:hidden}
-#bg{position:fixed;inset:-5%;background:url(bg.jpg) center/cover;filter:blur(40px) brightness(.35);transform-origin:50% 45%;will-change:transform}
+#bg{position:fixed;inset:-5%;background:url(bg.jpg) center/cover;filter:blur(40px) brightness(.35);transform-origin:50% 45%;will-change:transform;transition:transform 1.3s linear}
 #wrap{position:fixed;left:0;top:0;transform-origin:0 0;transition:transform 4s cubic-bezier(.45,0,.2,1)}
 #wrap img{display:block;width:100%;height:100%;box-shadow:0 0 60px #000}
 #veil{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity 3s}
@@ -20,8 +20,8 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family
 #cap h2{margin:0 0 .5em;font-weight:normal;font-size:clamp(1.1rem,2.4vw,1.6rem);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
 #cap p{margin:0 auto;max-width:42em;font-size:clamp(1rem,2vw,1.35rem);line-height:1.6}
 #cap .pr{margin-top:.8em;font-style:italic;color:var(--gold)}
-#bgglow{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(80% 78% at 50% 45%,rgba(236,206,142,.45),rgba(236,206,142,.16) 55%,rgba(236,206,142,.06) 100%)}
-#bgshade{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(78% 72% at 50% 45%,rgba(0,0,0,.10),rgba(0,0,0,.78) 100%)}
+#bgglow{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity 1.3s linear;background:radial-gradient(80% 78% at 50% 45%,rgba(236,206,142,.45),rgba(236,206,142,.16) 55%,rgba(236,206,142,.06) 100%)}
+#bgshade{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity 1.3s linear;background:radial-gradient(78% 72% at 50% 45%,rgba(0,0,0,.10),rgba(0,0,0,.78) 100%)}
 #breath{position:fixed;z-index:20;top:calc(4vh + env(safe-area-inset-top,0px));right:4vw;display:flex;align-items:center;gap:.8em;font-size:.95rem;opacity:0;transition:opacity 1.5s;text-shadow:0 1px 8px rgba(0,0,0,.95)}
 #orb{width:46px;height:46px;border-radius:50%;border:2px solid #8fe3f5;background:radial-gradient(#8fe3f5aa,#8fe3f522);box-shadow:0 0 18px rgba(120,215,235,.6);transform:scale(.7)}
 #ui{position:fixed;top:calc(3vh + env(safe-area-inset-top,0px));left:3vw;display:flex;gap:.5em;flex-wrap:wrap;transition:opacity .8s}
@@ -118,7 +118,7 @@ function show(n){if(n<0)n=0;if(n>=S.length){n=S.length-1;left=1e9}
  setTimeout(function(){$("t").textContent=p.t;$("x").textContent=p.x;$("pr").textContent=p.pr||"";cap.classList.remove("hide")},1200);
  focus(p);left=i===S.length-1?dur*1000:dur*1000;total=left;$("breath").style.opacity=p.b?1:0;chime()}
 var total=1,last=0;
-function tick(ts){var d=ts-last;last=ts;if(began&&!paused){left-=d;$("prog").style.width=(100-100*left/total)+"%";if(left<=0&&i<S.length-1)show(i+1)}
+function tick(ts){try{var d=ts-last;last=ts;if(began&&!paused){left-=d;$("prog").style.width=(100-100*left/total)+"%";if(left<=0&&i<S.length-1)show(i+1)}
  // breathing: rhythm from the selector
  if(rhythm!=="none"){
   var R=RHYTHMS[rhythm],cyc=(R.i+R.h+R.o)*1000,c=(ts%cyc)/1000,e,tx;
@@ -127,10 +127,10 @@ function tick(ts){var d=ts-last;last=ts;if(began&&!paused){left-=d;$("prog").sty
   else if(c<R.i+R.h){e=1;tx="Hold"}
   else {e=1-sm((c-R.i-R.h)/R.o);tx="Breathe out"}
   $("orb").style.transform="scale("+(.70+.50*e)+")";
-  if(bgBreathe){$("bg").style.transform="scale("+(1+.09*e).toFixed(4)+")";$("bgglow").style.opacity=(.10+.90*e).toFixed(3);$("bgshade").style.opacity=(.55-.42*e).toFixed(3)}
+  if(bgBreathe&&ts-(tick._bg||0)>900){tick._bg=ts;$("bg").style.transform="scale("+(1+.09*e).toFixed(4)+")";$("bgglow").style.opacity=(.10+.90*e).toFixed(3);$("bgshade").style.opacity=(.55-.42*e).toFixed(3)}
   if($("bt").textContent!==tx)$("bt").textContent=tx;
  }
- requestAnimationFrame(tick)}
+ }catch(e){}requestAnimationFrame(tick)}
 var hideT;function wake(){document.body.classList.remove("ui-off");UI.classList.remove("hide");clearTimeout(hideT);hideT=setTimeout(function(){if(began)document.body.classList.add("ui-off")},4000)}
 function toggleFS(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
 $("go").onclick=function(){began=true;$("start").classList.add("hide");wake();show(0);last=performance.now();if(music)padStart()};
